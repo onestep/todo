@@ -4,7 +4,7 @@ To run project you should simply type `mvn clean install jetty:run`
 Then you can navigate to http://localhost:8080/todo/
 
 TODO:
-1. Input validation
+1. Input validation (Completed)
 2. Redirection to /todo path if it was not specified
-3. Check for invalid password (do not create another user with the same username)
-4. Style changes (currently there is "dummy" style, which looks terribly :))
+3. Check for invalid password (do not create another user with the same username) (Completed)
+4. Style changes (currently there is "dummy" style, which looks terribly :)) (Completed)
