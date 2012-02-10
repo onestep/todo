@@ -22,7 +22,7 @@
             <a href="login.jsp?action=logout">Logout</a>
         </div>
         <h2 class="subheader">${sessionScope.user.userName}'s Task List</h2>
-        <table>
+        <table class="tasks">
             <thead>
                 <tr>
                     <th>Description</th>
@@ -32,10 +32,10 @@
             </thead>
             <tbody>
                 <c:forEach var="task" items="${requestScope.tasks}">
-                    <tr>
+                    <tr<c:if test="${task.completed}"> class="done"</c:if>>
                         <td>${task.description}</td>
                         <td><fmt:formatDate pattern="dd.MM.yyyy" value="${task.created}" /></td>
-                        <td><a href="task.jsp?action=setCompleted&amp;id=${task.id}">Complete</a></td>
+                        <td><c:if test="${!task.completed}"><a href="task.jsp?action=setCompleted&amp;id=${task.id}">Complete</a></c:if></td>
                     </tr>
                 </c:forEach>
             </tbody>

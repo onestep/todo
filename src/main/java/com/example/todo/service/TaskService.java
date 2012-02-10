@@ -89,7 +89,7 @@ public class TaskService {
         }
         
         try {
-            PreparedStatement ps = conn.prepareStatement("select id, description, created, completed from tasks where user_id = ? and completed = false");
+            PreparedStatement ps = conn.prepareStatement("select id, description, created, completed from tasks where user_id = ? order by completed, created");
             ps.setInt(1, user.getId());
             ResultSet rs = ps.executeQuery();
             List<Task> tasks = new ArrayList<Task>();

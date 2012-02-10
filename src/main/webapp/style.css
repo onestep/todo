@@ -18,3 +18,15 @@
     border: 1px solid white;
     border-radius: 5px;
 }
+
+.tasks {
+    background-color: white;
+    padding: 5px;
+    border: 1px solid white;
+    border-radius: 5px;
+}
+
+.tasks .done {
+    color: gray;
+    text-decoration: line-through;
+}
