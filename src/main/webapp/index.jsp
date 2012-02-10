@@ -17,11 +17,17 @@
     <body class="main">
         <h1 class="header">Example TODO</h1>
         <div class="subheader">
-            Index |
-            <a href="task.jsp">Add Task</a> |
+            Welcome, ${sessionScope.user.userName}! |
             <a href="login.jsp?action=logout">Logout</a>
         </div>
-        <h2 class="subheader">${sessionScope.user.userName}'s Task List</h2>
+        <h2 class="subheader">Your Tasks</h2>
+        <form method="POST" action="index.jsp">
+            <label for="description">Description:</label>
+            <input type="text" name="description" id="description" />
+            <input type="hidden" name="action" value="addTask" />
+            <input type="submit" name="add" value="Add This Task" />
+        </form>
+        <br/>
         <table class="tasks">
             <thead>
                 <tr>
@@ -34,8 +40,13 @@
                 <c:forEach var="task" items="${requestScope.tasks}">
                     <tr<c:if test="${task.completed}"> class="done"</c:if>>
                         <td>${task.description}</td>
-                        <td><fmt:formatDate pattern="dd.MM.yyyy" value="${task.created}" /></td>
-                        <td><c:if test="${!task.completed}"><a href="task.jsp?action=setCompleted&amp;id=${task.id}">Complete</a></c:if></td>
+                        <td><fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${task.created}" /></td>
+                        <td>
+                            <c:choose>
+                                <c:when test="${task.completed}">Completed!</c:when>
+                                <c:otherwise><a href="index.jsp?action=setCompleted&amp;id=${task.id}">✓ Complete</a></c:otherwise>
+                            </c:choose>
+                        </td>
                     </tr>
                 </c:forEach>
             </tbody>
