@@ -18,21 +18,26 @@ import java.util.List;
  */
 public class TaskService {
     
-    public static boolean addTask(Task task) {
+    public static Task addTask(User user, String description) {
         Connection conn = ConnectionPool.getConnection();
         if (conn == null) {
-            return false;
+            return null;
         }
         
         try {
+            Task task = null;
+            
             PreparedStatement ps = conn.prepareStatement("insert into tasks(user_id, description) values (?, ?)", Statement.RETURN_GENERATED_KEYS);
-            ps.setInt(1, task.getUser().getId());
-            ps.setString(2, task.getDescription());
+            ps.setInt(1, user.getId());
+            ps.setString(2, description);
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
+                task = new Task();
                 task.setId(rs.getInt(1));
+                task.setUser(user);
+                task.setDescription(description);
             }
 
             rs.close();
@@ -40,7 +45,7 @@ public class TaskService {
                         
             conn.commit();
             
-            return true;
+            return task;
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
             try {
@@ -48,7 +53,7 @@ public class TaskService {
             } catch (SQLException nestedEx) {
                 System.err.println(nestedEx.getMessage());
             }
-            return false;
+            return null;
         } finally {
             ConnectionPool.returnConnection(conn);
         }
@@ -89,7 +94,7 @@ public class TaskService {
         }
         
         try {
-            PreparedStatement ps = conn.prepareStatement("select id, description, created, completed from tasks where user_id = ? order by completed, created");
+            PreparedStatement ps = conn.prepareStatement("select id, description, created, completed from tasks where user_id = ? order by completed, created desc");
             ps.setInt(1, user.getId());
             ResultSet rs = ps.executeQuery();
             List<Task> tasks = new ArrayList<Task>();

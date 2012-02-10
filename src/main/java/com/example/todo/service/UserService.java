@@ -2,6 +2,8 @@ package com.example.todo.service;
 
 import com.example.todo.model.User;
 import com.example.todo.util.ConnectionPool;
+import com.example.todo.util.UserNotFoundException;
+import com.example.todo.util.WrongPasswordException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -39,81 +41,89 @@ public class UserService {
         return sb.toString();
     }
 
-    public static User getUser(String userName, String password) {
+    public static User getUser(String userName, String password) throws UserNotFoundException, WrongPasswordException {
         Connection conn = ConnectionPool.getConnection();
         if (conn == null) {
             return null;
         }
 
         try {
-            PreparedStatement ps = conn.prepareStatement("select id from users where user_name = ? and password_hash = ?");
+            User user = null;
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+
+            try {
+                ps = conn.prepareStatement("select * from users where user_name = ?");
+                ps.setString(1, userName);
+                rs = ps.executeQuery();
+                if (rs.next()) {
+                    user = new User();
+                    user.setId(0);
+                    user.setUserName(userName);
+                }
+            } catch (SQLException ex) {
+                System.err.println(ex.getMessage());            
+            } finally {
+                if (rs != null) {
+                    try { rs.close(); } catch (SQLException ex) {}
+                }
+                if (ps != null) {
+                    try { ps.close(); } catch (SQLException ex) {}
+                }
+            }
+            
+            if (user == null) {
+                throw new UserNotFoundException("User " + userName + " was not found");
+            }
+            
+            try {
+                ps = conn.prepareStatement("select id from users where user_name = ? and password_hash = ?");
+                ps.setString(1, userName);
+                ps.setString(2, md5(password));
+                rs = ps.executeQuery();
+                if (rs.next()) {
+                    user.setId(rs.getInt(1));
+                }
+            } catch (SQLException ex) {
+                System.err.println(ex.getMessage());
+            } finally {
+                if (rs != null) {
+                    try { rs.close(); } catch (SQLException ex) {}
+                }
+                if (ps != null) {
+                    try { ps.close(); } catch (SQLException ex) {}
+                }
+            }
+            
+            if (user.getId() == 0) {
+                throw new WrongPasswordException("Wrong password for user " + userName);
+            }
+            
+            return user;
+        } finally {
+            ConnectionPool.returnConnection(conn);
+        }
+    }
+
+    public static User addUser(String userName, String password) {
+        Connection conn = ConnectionPool.getConnection();
+        if (conn == null) {
+            return null;
+        }
+
+        try {
+            User user = null;
+            
+            PreparedStatement ps = conn.prepareStatement("insert into users(user_name, password_hash) values (?, ?)", Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, userName);
             ps.setString(2, md5(password));
-            ResultSet rs = ps.executeQuery();
-            User user;
-            if (rs.next()) {
-                user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUserName(userName);
-            } else {
-                user = null;
-            }
-            rs.close();
-            ps.close();
-
-            return user;
-        } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
-            return null;
-        } finally {
-            ConnectionPool.returnConnection(conn);
-        }
-    }
-
-    public static User getUser(int id) {
-        Connection conn = ConnectionPool.getConnection();
-        if (conn == null) {
-            return null;
-        }
-
-        try {
-            PreparedStatement ps = conn.prepareStatement("select user_name from users where id = ?");
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            User user;
-            if (rs.next()) {
-                user = new User();
-                user.setId(id);
-                user.setUserName(rs.getString("user_name"));
-            } else {
-                user = null;
-            }
-            rs.close();
-            ps.close();
-
-            return user;
-        } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
-            return null;
-        } finally {
-            ConnectionPool.returnConnection(conn);
-        }
-    }
-
-    public static boolean addUser(User user) {
-        Connection conn = ConnectionPool.getConnection();
-        if (conn == null) {
-            return false;
-        }
-
-        try {
-            PreparedStatement ps = conn.prepareStatement("insert into users(user_name) values (?)", Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, user.getUserName());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
+                user = new User();
                 user.setId(rs.getInt(1));
+                user.setUserName(userName);
             }
 
             rs.close();
@@ -121,7 +131,7 @@ public class UserService {
 
             conn.commit();
 
-            return true;
+            return user;
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
             try {
@@ -129,38 +139,7 @@ public class UserService {
             } catch (SQLException nestedEx) {
                 System.err.println(nestedEx.getMessage());
             }
-            return false;
-        } finally {
-            ConnectionPool.returnConnection(conn);
-        }
-    }
-
-    public static boolean changePassword(User user, String password) {
-        Connection conn = ConnectionPool.getConnection();
-        if (conn == null) {
-            return false;
-        }
-
-        try {
-            PreparedStatement ps = conn.prepareStatement("update users set password_hash = ? where id = ?");
-            ps.setString(1, md5(password));
-            ps.setInt(2, user.getId());
-            ps.executeUpdate();
-            ps.close();
-
-            conn.commit();
-            conn.close();
-
-            return true;
-        } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
-            try {
-                conn.rollback();
-            } catch (SQLException nestedEx) {
-                System.err.println(nestedEx.getMessage());
-
-            }
-            return false;
+            return null;
         } finally {
             ConnectionPool.returnConnection(conn);
         }

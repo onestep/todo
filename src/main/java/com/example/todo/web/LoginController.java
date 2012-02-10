@@ -1,8 +1,12 @@
 package com.example.todo.web;
 
-import com.example.todo.service.UserService;
 import com.example.todo.model.User;
+import com.example.todo.service.UserService;
+import com.example.todo.util.UserNotFoundException;
+import com.example.todo.util.WrongPasswordException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -13,7 +17,10 @@ import javax.servlet.http.HttpSession;
  */
 public class LoginController implements Controller {
 
+    private List<String> errors = new ArrayList<String>();
+
     public void actionMapper(HttpSession session, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.setAttribute("errors", errors);
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
@@ -31,20 +38,32 @@ public class LoginController implements Controller {
         }
 
         String userName = request.getParameter("userName");
+        if (userName == null || userName.isEmpty()) {
+            errors.add("User name can not be empty");
+        }
         String password = request.getParameter("password");
+        if (password == null || password.isEmpty()) {
+            errors.add("Password can not be empty");
+        }
 
-        User user = UserService.getUser(userName, password);
-        if (user == null) {
-            user = new User();
-            user.setUserName(userName);
-            if (!UserService.addUser(user) || !UserService.changePassword(user, password)) {
+        if (userName != null && !userName.isEmpty() && password != null && !password.isEmpty()) {
+            User user;
+            try {
+                user = UserService.getUser(userName, password);
+            } catch (UserNotFoundException ex) {
+                user = UserService.addUser(userName, password);
+                if (user == null) {
+                    errors.add("Can not register user with such name");
+                }
+            } catch (WrongPasswordException ex) {
+                errors.add("Password is wrong");
                 user = null;
             }
-        }
-        
-        if (user != null) {
-            session.setAttribute("user", user);
-            response.sendRedirect("index.jsp");            
+
+            if (user != null) {
+                session.setAttribute("user", user);
+                response.sendRedirect("index.jsp");
+            }
         }
     }
 

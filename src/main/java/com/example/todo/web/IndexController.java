@@ -1,12 +1,10 @@
 package com.example.todo.web;
 
-import com.example.todo.service.TaskService;
 import com.example.todo.model.Task;
 import com.example.todo.model.User;
+import com.example.todo.service.TaskService;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +17,7 @@ import javax.servlet.http.HttpSession;
 public class IndexController implements Controller {
 
     private User user;
+    private List<String> errors = new ArrayList<String>();
 
     public void actionMapper(HttpSession session, HttpServletRequest request, HttpServletResponse response) throws IOException {
         user = (User) session.getAttribute("user");
@@ -26,6 +25,7 @@ public class IndexController implements Controller {
             response.sendRedirect("login.jsp");
             return;
         }
+        request.setAttribute("error", errors);
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
@@ -49,15 +49,18 @@ public class IndexController implements Controller {
     private void addTaskAction(HttpSession session, HttpServletRequest request, HttpServletResponse response) throws IOException {
         String description = request.getParameter("description");
 
-        Task task = new Task();
-        task.setUser(user);
-        task.setDescription(description);
-
-        TaskService.addTask(task);
+        if (description != null && !description.isEmpty()) {
+            Task task = TaskService.addTask(user, description);
+            if (task == null) {
+                errors.add("Can not add this task");
+            }
+        } else {
+            errors.add("Task description is not specified");
+        }
     }
 
     private void setCompletedAction(HttpSession session, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int taskId = Integer.parseInt(request.getParameter("id"));
+        int taskId = Integer.parseInt(request.getParameter("taskId"));
 
         TaskService.setCompleted(taskId);
     }
