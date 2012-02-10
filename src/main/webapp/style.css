@@ -1,0 +1,20 @@
+.main {
+    color: black;
+    background-color: lightblue;
+    font-family: sans-serif;
+}
+
+.header {
+    color: white;
+    background-color: darkred;
+    padding: 15px;
+    border: 1px solid darkred;
+    border-radius: 5px;
+}
+
+.subheader {
+    background-color: white;
+    padding: 5px;
+    border: 1px solid white;
+    border-radius: 5px;
+}
