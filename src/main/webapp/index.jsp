@@ -34,31 +34,36 @@
                 <input type="hidden" name="action" value="addTask" />
                 <input type="submit" name="add" value="Add This Task" />
             </form>
-            <c:if test="${!empty requestScope.tasks}">
-                <table class="tasks">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="task" items="${requestScope.tasks}">
-                            <tr<c:if test="${task.completed}"> class="done"</c:if>>
-                                <td>${task.description}</td>
-                                <td><fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${task.created}" /></td>
-                                <td>
-                                    <c:choose>
-                                        <c:when test="${task.completed}">✓ Completed!</c:when>
-                                        <c:otherwise><a href="index.jsp?action=setCompleted&amp;taskId=${task.id}">Complete</a></c:otherwise>
-                                    </c:choose>
-                                </td>
+            <c:choose>
+                <c:when test="${!empty requestScope.tasks}">
+                    <table class="tasks">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
                             </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
-            </c:if>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="task" items="${requestScope.tasks}">
+                                <tr<c:if test="${task.completed}"> class="done"</c:if>>
+                                    <td>${task.description}</td>
+                                    <td><fmt:formatDate pattern="dd.MM.yyyy HH:mm" value="${task.created}" /></td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${task.completed}">✓ Completed!</c:when>
+                                            <c:otherwise><a href="index.jsp?action=setCompleted&amp;taskId=${task.id}">Complete</a></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </c:when>
+                <c:otherwise>
+                    <div class="tasks">You have no tasks yet</div>
+                </c:otherwise>
+            </c:choose>
         </div>
     </body>
 </html>
