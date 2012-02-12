@@ -98,3 +98,11 @@ a.loginlink {
 a:hover.loginlink {
     color: white;
 }
+
+a.actionlink {
+    color: blue;
+}
+
+a:hover.actionlink {
+    color: red;
+}

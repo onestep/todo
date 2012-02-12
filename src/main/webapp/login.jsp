@@ -1,11 +1,8 @@
-<%@page import="com.example.todo.web.Controller"%>
-<%@page import="com.example.todo.web.LoginController"%>
+<%
+    new com.example.todo.web.LoginController().actionMapper(session, request, response);
+%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-<%
-    Controller controller = new LoginController();
-    controller.actionMapper(session, request, response);
-%>
 <!DOCTYPE html>
 <html>
     <head>

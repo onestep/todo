@@ -4,6 +4,7 @@ import com.example.todo.model.Task;
 import com.example.todo.model.User;
 import com.example.todo.service.TaskService;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -25,7 +26,8 @@ public class IndexController implements Controller {
             response.sendRedirect("login.jsp");
             return;
         }
-        request.setAttribute("error", errors);
+
+        request.setAttribute("errors", errors);
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
@@ -36,7 +38,9 @@ public class IndexController implements Controller {
             setCompletedAction(session, request, response);
         }
 
-        /* always perform default action */
+        /*
+         * always perform default action
+         */
         defaultAction(session, request, response);
     }
 
@@ -60,8 +64,29 @@ public class IndexController implements Controller {
     }
 
     private void setCompletedAction(HttpSession session, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int taskId = Integer.parseInt(request.getParameter("taskId"));
+        Integer taskId;
+        try {
+            taskId = new Integer(request.getParameter("taskId"));
+        } catch (NumberFormatException ex) {
+            taskId = null;
+        } catch (NullPointerException ex) {
+            taskId = null;
+        }
 
-        TaskService.setCompleted(taskId);
+        boolean result;
+        if (taskId != null) {
+            result = TaskService.setCompleted(taskId.intValue());
+        } else {
+            result = false;
+        }
+
+        if ("ajax".equals(request.getParameter("responseType"))) {
+            response.setContentType("text/plain");
+            response.setCharacterEncoding("UTF-8");
+
+            OutputStreamWriter outsw = new OutputStreamWriter(response.getOutputStream());
+            outsw.write(Boolean.toString(result));
+            outsw.flush();
+        }
     }
 }
